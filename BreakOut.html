@@ -1,0 +1,635 @@
+<!DOCTYPE html> 
+<html lang="es"> 
+<head> 
+	<title>BreakOut</title>
+	<script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="jquery.timer.js" type="text/javascript"></script>
+	<link href="BreakOutStyle.css" rel="stylesheet" type="text/css" />
+	<!--script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"></script-->
+</head> 
+<body>
+<script>
+$(document).ready(function(){
+
+	var vLevels = [];
+	//startControl determina si tenes que empezar el juego
+	startControl = 0;
+	speedPlayer = 8;
+	speedBall_x = 0;
+	speedBall_y = 0;
+	posBall_x = 415;
+	posBall_y = 540;
+	posPlayer = 370;
+	cantLife = 5;
+	pointPlayer = 0;
+	sumPoint = 0;
+	sumTemp = 0;
+	level = 7;
+	//Lost es 1 si perdiste el juego
+	lost = 0;
+	//Win es 1 si se gano el juego, cuando se quedan sin bricks
+	win = 0;
+	
+	$player = $('#player');
+	$ball = $('#ball');
+	$life = $('#life');
+	
+	controlTop = 0;
+	controlLat = 0;
+	
+	posBrick_x = 0;
+	posBrick_y = 50;
+	
+	//cantBrick = 66;
+	
+	//Carga los bricks en la pantalla, dentro de el div brickWall
+	function loadBricks()
+	{		
+		var especificBrick;
+		
+		for ( var i = 1; i < 7; i++ ) 
+		{
+			backgroundColor = getBackground(i);
+			for ( var j = 1; j < 12; j++)
+			{
+				//Aca se verifica si esta en un vector, el cual va a ser completado con distintos valores segun el nivel en el que se este
+				tempName = i.toString()+'-'+j.toString();
+				if($.inArray(tempName,vLevels) != -1)
+				{
+					printDisplay = 'display:none;';
+				}
+				else
+				{
+					printDisplay = '';
+				}
+				//backgroundColor = getBackground(1 + Math.floor(Math.random() * 7)); //Descomentar este y comentar el de arriba para que cada brick sea de un color distinto sin importar el renglon
+				if(j == 1 && i == 1)
+				{
+					especificBrick = '<div class="brick" id="brick'+(posBrick_x.toString())+'-'+((posBrick_y).toString())+'" style="left: '+posBrick_x+'px; top: '+posBrick_y+'px; background: '+backgroundColor+';visibility: visible;'+printDisplay+'"></div>';
+				}
+				else
+				{
+					especificBrick = especificBrick + '<div class="brick" id="brick'+(posBrick_x.toString())+'-'+((posBrick_y).toString())+'" style="left: '+posBrick_x+'px; top: '+posBrick_y+'px; background: '+backgroundColor+';visibility: visible;'+printDisplay+'"></div>';
+				}
+				posBrick_x += 55;
+			}
+			posBrick_x = 0;
+			posBrick_y += 20;
+		}
+		$('#brickWall').html(especificBrick);
+		
+	}
+	
+	//Obtiene un color para los bricks
+	function getBackground(i)
+	{
+		//randomBackground = 1 + Math.floor(Math.random() * 7); //Genera un numero aleatorio para un color de brick
+		switch(i)
+		{
+			case 1:
+				return 'blue';
+				break;
+			case 2:
+				return 'green';
+				break;
+			case 3:
+				return 'red';
+				break;
+			case 4:
+				return 'orange';
+				break;
+			case 5:
+				return 'yellow';
+				break;
+			case 6:
+				return 'grey';
+				break;
+			case 7:
+				return 'pink';
+				break;
+		}
+		
+	}
+	
+	//Llama a la funcion para cargar los bricks en la pantalla
+	//loadBricks();
+	nextLevel(level);
+	
+	function nextLevel(currentLevel)
+		{
+			if(currentLevel == 10)
+			{
+				win = 1;
+			}
+			else
+			{
+				vLevels = [];
+				level = currentLevel + 1;
+				switch(level)
+				{
+					case 1:
+						vLevels = [];
+						cantBrick = 66;
+						break;
+					case 2:
+						vLevels = ["2-2","3-2","4-2","5-2","2-4","3-4","4-4","5-4","2-6","3-6","4-6","5-6","2-8","3-8","4-8","5-8","2-10","3-10","4-10","5-10"];
+						cantBrick = 46;
+						break;
+					case 3:
+						vLevels = ["2-3","2-4","2-5","2-6","2-7","2-8","2-9","3-2","3-4","3-5","3-6","3-7","3-8","3-10","4-2","4-3","4-5","4-6","4-7","4-9","4-10","5-2","5-3","5-4","5-6","5-8","5-9","5-10"];
+						cantBrick = 37;
+						break;
+					case 4:
+						vLevels = ["2-4","2-5","3-4","3-5","2-7","2-8","3-7","3-8","4-2","5-3","5-4","5-5","5-6","5-7","5-8","5-9","4-10"];
+						cantBrick = 49;
+						break;
+					case 5:
+						vLevels = ["3-2","4-2","2-3","5-3","2-4","5-4","3-5","4-5","2-6","5-6","3-7","4-7","2-8","5-8","2-9","5-9","3-10","4-10"];
+						cantBrick = 48;
+						break;
+					case 6:
+						vLevels = ["2-2","2-3","2-4","2-5","2-6","2-7","2-8","2-9","2-10","4-2","4-3","4-4","4-5","4-6","4-7","4-8","4-9","4-10","6-2","6-4","6-6","6-8","6-10"];
+						cantBrick = 43;
+						break;
+					case 7:
+						vLevels = ["1-2","1-4","1-6","1-8","1-10","2-1","2-3","2-5","2-7","2-9","2-11","3-2","3-4","3-6","3-8","3-10","4-1","4-3","4-5","4-7","4-9","4-11","5-2","5-4","5-6","5-8","5-10","6-1","6-3","6-5","6-7","6-9","6-11"];
+						cantBrick = 33;
+						break;
+					case 8:
+						vLevels = ["1-2","1-3","1-4","2-3","3-2","3-4","4-2","4-3","4-4","5-2","5-3","5-4","6-2","6-3","6-4","1-6","2-6","3-6","4-6","5-6","6-6","1-7","1-8","1-10","1-11","2-7","2-11","5-7","5-11","6-7","6-8","6-10","6-11"];
+						cantBrick = 33;
+						break;
+					case 9:
+						vLevels = ["1-2","1-3","1-4","2-3","3-2","3-4","4-2","4-3","4-4","5-2","5-3","5-4","6-2","6-3","6-4","1-6","2-6","3-6","4-6","5-6","6-6","1-10","1-11","2-8","2-9","2-11","3-8","3-9","3-10","4-8","4-9","4-10","5-8","5-9","5-11","6-10","6-11"];
+						cantBrick = 29;
+						break;
+					case 10:
+						vLevels = ["1-6","2-6","3-6","4-6","5-6","6-6","2-2","2-3","2-4","2-5","3-5","4-5","5-2","5-3","5-4","5-5","2-8","2-9","2-10","2-11","3-11","4-11","5-8","5-9","5-10","5-11","6-8","6-9","6-10","6-11"];
+						cantBrick = 36;
+						break;
+				}
+				
+				startControl = 0;
+				speedBall_x = 0;
+				speedBall_y = 0;
+				posPlayer = 330
+				posBall_x = posPlayer + 45;
+				posBall_y = 540;
+				speedPlayer = 8;
+				$player.css('left', posPlayer + "px");
+				lost = 0;
+				win = 0;
+				posBrick_x = 0;
+				posBrick_y = 50;
+				//cantBrick = 60;
+				sumPoint = 0;
+				sumTemp = 0;				
+				loadBricks();
+			}
+		}
+	
+	var timer = $.timer(function(){
+	
+		if(win == 0){
+			//Lost controla que el jugador no haya perdido
+			if(lost == 0){
+			
+				//StartControl controla que se haya iniciado el juego
+				if(startControl == 1){
+					if(speedBall_x >=7)
+					{
+						speedBall_x = 5;
+					}
+					
+					if(speedBall_y >=7)
+					{
+						speedBall_y = 6;
+					}
+						
+					
+					//Control de rebote en la barra de jugador 1, se puede mejorar
+					if((posBall_y >= 540 && posBall_y <= 565))
+					{
+						if(posBall_x >= posPlayer && posBall_x <= posPlayer + 100)
+						{
+							if(controlLat == 1){
+								if(posBall_x >= posPlayer && posBall_x <= posPlayer + 30)
+								{
+									controlLat = 0;
+									speedBall_x += 1;
+								}
+							}
+							else
+							{
+								if(posBall_x >= posPlayer + 70 && posBall_x <= posPlayer + 100)
+								{
+									controlLat = 1;
+									speedBall_x += 1;
+								}
+							}
+							
+							sumPoint = 0;
+							controlTop = 0;
+							speedBall_x += 1;
+							speedBall_y += 1;
+						}
+					}
+					
+					controlRebound();
+					
+					disableBrick();
+					
+				}
+							
+				accelerateBall();
+				
+				//Imprime la cantidad de vidas
+				//$life.html('<meter min="0" low="30" high="50" max="100" value="'+(cantLife * 10 * 2)+'" ></meter><br>');
+				$life.html('<meter min="0" low="50" high="100" max="100" value="'+(cantLife * 10 * 2)+'"></meter><br>');
+				$('#points').html(pointPlayer);
+				
+				//Imprime la posicion de la pelota en la pantalla
+				$ball.css('top', posBall_y + 'px');
+				$ball.css('left', posBall_x + 'px');
+				
+			}
+			else
+			{
+				$('#lostOrWinText').html("Perdio todas sus vidas.\n Presione 'n' para empezar un nuevo juego");
+			}
+		}
+		else
+		{
+			$('#lostOrWinText').html("Felicitaciones! Gano la partida.<br> Presione 'n' para empezar un nuevo juego");
+		}
+	},20,true);
+	
+	//Borra los brick de la pantalla en caso de que sean tocados por la pelota y controla si se gano la partida
+	//Usa los datos que recibe de controlTopBrick y controlLatBrick
+	function disableBrick()
+	{
+		if(posBall_y <= 175 && posBall_y >= 50)
+		{
+			
+			tBrick = controlTopBrick();
+			lBrick = controlLatBrick();
+			
+			var nameId = 'brick'+(lBrick.toString())+'-'+(tBrick.toString());
+			if($('#'+nameId).is(':visible'))
+			{
+				$('#'+nameId).fadeOut('slow');
+				$('#'+nameId).css('display','none');
+				controlTop = 1;
+				cantBrick -= 1;
+				//$('#brickCant').html(cantBrick);
+				pointPlayer += sumPoint;
+			}
+			else
+			{
+				sumPoint -= sumTemp;
+			}
+			
+			if(cantBrick == 0)
+			{
+				//win = 1;
+				nextLevel(level);
+			}
+		}
+	}
+	
+	//Devuelve la posicion en y para controlar el brick que toca la pelota
+	function controlTopBrick()
+	{
+		if(posBall_y <= 175 && posBall_y >= 150)
+		{
+			topBrick = 150;
+			sumPoint += 50;
+			sumTemp = 50;
+		}
+		if(posBall_y <= 150 && posBall_y >= 130)
+		{
+			topBrick = 130;
+			sumPoint += 100;
+			sumTemp = 100;
+		}
+		if(posBall_y <= 130 && posBall_y >= 110)
+		{
+			topBrick = 110;
+			sumPoint += 150;
+			sumTemp = 150;
+		}
+		if(posBall_y <= 110 && posBall_y >= 90)
+		{
+			topBrick = 90;
+			sumPoint += 200;
+			sumTemp = 200;
+		}
+		if(posBall_y <= 90 && posBall_y >= 70)
+		{
+			topBrick = 70;
+			sumPoint += 500;
+			sumTemp = 500;
+		}
+		if(posBall_y <= 70 && posBall_y >= 50)
+		{
+			topBrick = 50;
+			sumPoint += 1000;
+			sumTemp = 1000;
+		}
+		return topBrick;
+	}
+	
+	//Devuelve la posicion en x para controlar el brick que toca la pelota
+	function controlLatBrick()
+	{
+		if(posBall_x >= 100 & posBall_x < 155)
+		{
+			leftBrick = 0;
+		}
+		if(posBall_x >= 155 & posBall_x < 210)
+		{
+			leftBrick = 55;
+		}
+		if(posBall_x >= 210 & posBall_x < 265)
+		{
+			leftBrick = 110;
+		}
+		if(posBall_x >= 265 & posBall_x < 320)
+		{
+			leftBrick = 165;
+		}
+		if(posBall_x >= 320 & posBall_x < 375)
+		{
+			leftBrick = 220;
+		}
+		if(posBall_x >= 375 & posBall_x < 430)
+		{
+			leftBrick = 275;
+		}
+		if(posBall_x >= 430 & posBall_x < 485)
+		{
+			leftBrick = 330;
+		}
+		if(posBall_x >= 485 & posBall_x < 540)
+		{
+			leftBrick = 385;
+		}
+		if(posBall_x >= 540 & posBall_x < 595)
+		{
+			leftBrick = 440;
+		}
+		if(posBall_x >= 595 & posBall_x < 650)
+		{
+			leftBrick = 495;
+		}
+		if(posBall_x >= 650 & posBall_x < 705)
+		{
+			leftBrick = 550
+		}
+		return leftBrick;
+	}
+	
+	//Controla aleatoriamente para que lado va a salir la pelota
+	function controlStartSide(randomSide)
+	{
+		switch(randomSide)
+		{
+			case 1:
+				controlLat = 0;
+				break;
+			case 2:
+				controlLat = 1;
+				break;
+		}
+	}
+	
+	//Controla el rebote en las paredes, en la parte superior o si se pierde
+	function controlRebound()
+	{
+		//Control Lateral
+		if((posBall_x - speedBall_x) <= 100)
+		{
+			controlLat = 1;
+		}
+		if((posBall_x + speedBall_x) >= 700)
+		{
+			controlLat = 0;
+		}
+		
+		//Control Superior
+		if((posBall_y - speedBall_y) <= 10)
+		{
+			controlTop = 1;
+		}
+		
+		//Control si se pierde vida
+		if((posBall_y + speedBall_y) >= 600)
+		{
+			controlTop = 0;
+			losingLife();
+		}
+	}
+	
+	//Descuenta una vida al llegar a la parte inferior del tablero y controla si se quedo sin vidas
+	function losingLife()
+	{
+		startControl = 0;
+		cantLife -= 1;
+		speedBall_x = 0;
+		speedBall_y = 0;		
+		posBall_x = posPlayer + 45;
+		posBall_y = 540;
+		sumPoint = 0;
+		if(cantLife == 0)
+		{
+			lost = 1;
+			speedPlayer = 0;
+		}
+	}
+	
+	//Asigna la siguiente posicion que va a tener la pelota
+	function accelerateBall()
+	{
+		if(controlTop == 0 && controlLat == 0){
+			posBall_x -= speedBall_x;
+			posBall_y -= speedBall_y;
+		}
+		if(controlTop == 1 && controlLat == 0){
+			posBall_x -= speedBall_x;
+			posBall_y += speedBall_y;
+		}
+		if(controlTop == 0 && controlLat == 1){
+			posBall_x += speedBall_x;
+			posBall_y -= speedBall_y;
+		}
+		if(controlTop == 1 && controlLat == 1){
+			posBall_x += speedBall_x;
+			posBall_y += speedBall_y;
+		}
+	}
+	
+		$('body').keydown(function() 
+		{
+			switch(event.which) {
+				// 37 responde a la flecha izquierda que mueve la barra del jugador
+				case 37:
+					if((posPlayer-speedPlayer) > 99){
+						posPlayer -= speedPlayer;
+						$player.css('left', posPlayer + "px");
+						if(startControl == 0){
+							posBall_x -= speedPlayer;
+							$ball.css('left', posBall_x + "px");
+						}
+					}
+					break;
+				// 39 responde a la flecha derecha que mueve la barra del jugador
+				case 39:
+					if((posPlayer+speedPlayer) < 605){
+						posPlayer += speedPlayer;
+						$player.css('left', posPlayer + "px");
+						if(startControl == 0){
+							posBall_x += speedPlayer;
+							$ball.css('left', posBall_x + "px");
+						}
+					}
+					break;
+				// 32 responde a la tecla espacio que da inicio al juego
+				case 32:
+					if(startControl == 0)
+					{
+						controlTop = 0;
+						startControl = 1;
+						controlStartSide((1 + Math.floor(Math.random() * 2)));
+						speedBall_x = 1 + Math.floor(Math.random() * 3);
+						speedBall_y = 1 + Math.floor(Math.random() * 3);
+					}
+					break;
+			}
+		});
+		
+		//controlPause es 0 si no esta pausado, es 1 si el juego esta pausado
+		controlPause = 0;
+		
+		speedBallAnt_x = 0;
+		speedBallAnt_y = 0;
+		
+		$('body').keydown(function() 
+		{
+			if(startControl==1){
+				switch(event.which) {
+				
+					// 80 responde a la letra 'p' y se usa para el pausado del juego
+					case 80:
+					
+						if(controlPause == 0){
+						
+							controlPause = 1;
+							
+							speedBallAnt_x = speedBall_x;
+							speedBallAnt_y = speedBall_y;
+							
+							speedBall_x = 0;
+							speedBall_y = 0;
+							
+							$('#pauseText').html("Pausa");
+							$('#restartText').html("Presione 'R' para Reset");
+						}
+						else
+						{
+							controlPause = 0;
+							
+							speedBall_x = speedBallAnt_x;
+							speedBall_y = speedBallAnt_y;
+							
+							$('#pauseText').html("");
+							$('#restartText').html("");
+						}
+						break;
+					
+					// 82 responde a la letra 'r' y llama a la funcion resetPartido
+					case 82:
+						if(controlPause==1){
+							controlPause = 0;
+							restartGame();
+						}
+						break;
+				}
+			}
+		});
+		
+		$('body').keydown(function() 
+		{
+			if(lost==1 || win == 1){
+				switch(event.which) {
+				
+					// 78 responde a la letra 'n' y se usa para crear un nuevo juego una vez que se perdio
+					case 78:
+						restartGame();
+						break;
+				}
+			}
+		});
+		
+		//Resetea el puntaje del partido. Como si se volviera a comenzar
+		function restartGame()
+		{
+		
+			$('#pauseText').html("");
+			$('#restartText').html("");
+			$('#lostOrWinText').html("");
+			
+			//Seteo todas las variables a cero y dibujo el player en la posicion inicial
+			startControl = 0;
+			//var vLevels = [];
+			//level = 0;
+			cantLife = 5;
+			speedBall_x = 0;
+			speedBall_y = 0;
+			posPlayer = 330
+			posBall_x = posPlayer + 45;
+			posBall_y = 540;
+			speedPlayer = 8;
+			$player.css('left', posPlayer + "px");
+			lost = 0;
+			win = 0;
+			posBrick_x = 0;
+			posBrick_y = 50;
+			cantBrick = 66;
+			sumPoint = 0;
+			sumTemp = 0;
+			pointPlayer = 0;
+			nextLevel(0);
+			//loadBricks();
+		}
+		
+});
+</script> 
+<div id="gameCourt" align="center">
+<span id="pauseText"></span></br>
+<span id="restartText"></span></br>
+<div id="brickWall">
+	
+</div>
+</div>
+<div class="posText" align="center"><span id="lostOrWinText"></span></div>
+<div id="lifeText">
+	Vidas:&nbsp;&nbsp;<span id="life"></span></br>
+	Puntos:&nbsp;<span id="points"></span></br>
+	<!--Bricks:&nbsp;<span id="brickCant"></span>-->
+	
+</div>
+<div id="player"></div>
+<div id="ball"></div>
+<!--div id="colorChoice">
+	<form>
+		Color Jugador 1:&nbsp;&nbsp;<input type="color" name="color1" id="colorJ1"/>
+		<br>
+		Color Jugador 2:&nbsp;&nbsp;<input type="color" name="color2" id="colorJ2"/>
+		<br>
+		Color Pelota:&nbsp;&nbsp;<input type="color" name="colorP" id="colorP"/>
+		<br>
+		Color Cancha:&nbsp;&nbsp;<input type="color" name="colorC" id="colorC"/>
+	</form>
+</div-->
+</body> 
+</html>

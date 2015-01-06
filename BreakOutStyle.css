@@ -1,0 +1,74 @@
+#gameCourt
+{
+	position: absolute;
+	width: 605px;
+	height: 600px;
+	left: 100px;
+	background-color: black;
+	
+	border-right: 1px solid black;
+}
+#player
+{
+	position: absolute;
+	left: 370px;
+	top: 550px;
+	width: 100px;
+	height: 15px;
+	background: grey;
+	border-radius: 8px;
+}
+#ball
+{
+	position: absolute;
+	left: 415px;
+	top: 540px;
+	border-radius: 5px;
+	background: white;
+	width: 10px;
+	height: 10px;
+}
+#pauseText
+{
+	color: white;
+	font-size: 20px;
+}
+#restartText
+{
+	color: white;
+	font-size: 20px;
+}
+.posText
+{
+	position: absolute;
+	left: 100px;
+	width: 550px;
+	top: 400px;
+}
+#lostOrWinText
+{
+	color: white;
+	font-size: 20px;
+}
+#lifeText
+{
+	position: absolute;
+	left: 729px;
+	top: 50px;
+	color: black;
+}
+#brickWall
+{
+	width: 605px;
+	height: 120px;
+	left: 100px;
+	top: 0px;
+}
+.brick
+{
+	position: absolute;
+	width: 54px;
+	height: 20px;
+	border-radius: 4px;
+	border: 1px solid black;
+}
